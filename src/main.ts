@@ -1,7 +1,7 @@
 // main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import basicAuth from 'express-basic-auth';
 
@@ -9,7 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'development') {
     app.use(
       ['/api/docs'],
       basicAuth({
@@ -20,6 +20,13 @@ async function bootstrap() {
         },
       }),
     );
+
+    app.setGlobalPrefix('api', {
+      exclude: [
+        { path: 'auth/*path', method: RequestMethod.ALL },
+        { path: 'open/*path', method: RequestMethod.ALL },
+      ],
+    });
 
     const config = new DocumentBuilder()
       .setTitle('E-commerce API')
