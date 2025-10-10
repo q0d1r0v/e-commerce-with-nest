@@ -4,7 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '@/src/common/prisma.service';
+import { PrismaService } from '@/src/prisma.service';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
@@ -57,7 +57,6 @@ export class AuthService {
       data: { userId: user.id, code, expiresAt },
     });
 
-    console.log(`OTP for ${dto.phoneNumber}: ${code}`);
     return { message: 'OTP sent' };
   }
 
@@ -104,7 +103,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
-      where: { phoneNumber: dto.phoneNumber },
+      where: { phoneNumber: dto.phoneNumber, deletedAt: null },
     });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
@@ -112,7 +111,9 @@ export class AuthService {
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
     const payload = { sub: user.id, role: user.role };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.NODE_ENV === 'production' ? '15m' : '7d',
+    });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     await this.prisma.user.update({
@@ -167,7 +168,6 @@ export class AuthService {
       data: { userId: user.id, code, expiresAt },
     });
 
-    console.log(`Forgot password OTP for ${dto.phoneNumber}: ${code}`);
     return { message: 'OTP sent' };
   }
 

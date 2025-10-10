@@ -6,9 +6,17 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
 import { UsersService } from '@/src/modules/users/users.service';
-import { User } from '@prisma/client';
+import { Role } from '@prisma/client';
 
-export type AuthenticatedUser = Omit<User, 'password' | 'refreshToken'>;
+export type AuthenticatedUser = {
+  id: string;
+  fullName: string | null;
+  phoneNumber: string;
+  role: Role;
+  file: { id: string; name: string; path: string } | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;

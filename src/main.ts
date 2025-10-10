@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import basicAuth from 'express-basic-auth';
+import { LoggerService } from '@/src/modules/logger/logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,6 +39,12 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('/api/docs', app, document);
   }
+
+  const logger = app.get(LoggerService);
+  app.useLogger(logger);
+
+  logger.setContext('Bootstrap');
+  logger.log('🚀 Application is starting...');
 
   await app.listen(process.env.PORT ?? 3000);
 }

@@ -13,16 +13,21 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  fullName     String?  @map("full_name")
-  phoneNumber  String   @unique @map("phone_number")
-  password     String?
-  refreshToken String?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  orders       Order[]
-  Otp          Otp[]
+  id                         String        @id @default(uuid())
+  fullName                   String?       @map("full_name")
+  phoneNumber                String        @unique @map("phone_number")
+  deletedOriginalPhoneNumber String?
+  password                   String?
+  refreshToken               String?
+  role                       Role          @default(USER)
+  fileId                     String?       @map("file_id")
+  file                       File?         @relation(fields: [fileId], references: [id])
+  createdAt                  DateTime      @default(now()) @map("created_at")
+  updatedAt                  DateTime      @updatedAt @map("updated_at")
+  deletedAt                  DateTime?     @map("deleted_at")
+  orders                     Order[]
+  Otp                        Otp[]
+  Transaction                Transaction[]
 
   @@map("users")
 }
@@ -50,6 +55,7 @@ model Category {
   products  Product[]
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
+  deletedAt DateTime?  @map("deleted_at")
 
   @@map("categories")
 }
@@ -62,10 +68,12 @@ model Product {
   stock       Int         @default(0)
   categoryId  String      @map("category_id")
   category    Category    @relation(fields: [categoryId], references: [id])
+  fileId      String?     @map("file_id")
+  file        File?       @relation(fields: [fileId], references: [id])
   orderItems  OrderItem[]
-  files       File[]
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
+  deletedAt   DateTime?   @map("deleted_at")
 
   @@map("products")
 }
@@ -79,15 +87,16 @@ enum OrderStatus {
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  userId    String      @map("user_id")
-  user      User        @relation(fields: [userId], references: [id])
-  total     Float
-  status    OrderStatus @default(PENDING)
-  items     OrderItem[]
-  payment   Payment?
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  user        User          @relation(fields: [userId], references: [id])
+  total       Float
+  status      OrderStatus   @default(PENDING)
+  items       OrderItem[]
+  payment     Payment?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  Transaction Transaction[]
 
   @@map("orders")
 }
@@ -127,18 +136,58 @@ model Payment {
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
 
-  order Order @relation(fields: [orderId], references: [id])
+  order       Order         @relation(fields: [orderId], references: [id])
+  Transaction Transaction[]
 
   @@map("payments")
 }
 
 model File {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
+  name      String
   path      String
-  productId String?  @map("product_id")
-  product   Product? @relation(fields: [productId], references: [id])
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  Product   Product[]
+  User      User[]
 
   @@map("files")
+}
+
+enum TransactionType {
+  PAYMENT
+  REFUND
+  WITHDRAWAL
+  DEPOSIT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Transaction {
+  id     String  @id @default(uuid())
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  orderId String? @map("order_id")
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  paymentId String?  @map("payment_id")
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
+  type        TransactionType
+  status      TransactionStatus @default(PENDING)
+  amount      Float
+  description String?
+  metadata    Json?
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([orderId])
+  @@map("transactions")
 }
