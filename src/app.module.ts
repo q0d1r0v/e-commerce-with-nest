@@ -5,13 +5,21 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '@/src/modules/users/users.module';
 import { AuthMiddleware } from '@/src/middleware/auth.middleware';
 import { LoggerModule } from '@/src/modules/logger/logger.module';
+import { FilesModule } from '@/src/modules/files/files.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
+    FilesModule,
     LoggerModule,
     AuthModule,
     UsersModule,

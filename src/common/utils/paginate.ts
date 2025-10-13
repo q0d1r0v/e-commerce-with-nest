@@ -29,10 +29,11 @@ export async function paginate<
   options: PaginateOptions<Model, Where, OrderBy, Select>,
 ): Promise<PaginatedResult<Model>> {
   const { model, where, orderBy, select, page = 1, limit = 15 } = options;
-  const skip = (page - 1) * limit;
 
+  const skip = (page - 1) * limit;
   const prismaModel = model(prisma);
 
+  // Parallel query: ma'lumotlar va jami sonni olish
   const [data, total] = await Promise.all([
     prismaModel.findMany({
       where,
@@ -44,13 +45,15 @@ export async function paginate<
     prismaModel.count({ where }),
   ]);
 
+  const lastPage = Math.ceil(total / limit);
+
   return {
     data,
     meta: {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      lastPage,
     },
   };
 }

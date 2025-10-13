@@ -157,7 +157,7 @@ export class UsersService {
       }
 
       const conflict = await this.prisma.user.findUnique({
-        where: { phoneNumber: existing.deletedOriginalPhoneNumber as string },
+        where: { phoneNumber: existing.deletedOriginalPhoneNumber },
       });
 
       if (conflict) {
@@ -170,7 +170,7 @@ export class UsersService {
         where: { id },
         data: {
           deletedAt: null,
-          phoneNumber: existing.deletedOriginalPhoneNumber as string,
+          phoneNumber: existing.deletedOriginalPhoneNumber,
           deletedOriginalPhoneNumber: null,
         },
       });

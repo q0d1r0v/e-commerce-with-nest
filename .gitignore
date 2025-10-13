@@ -58,3 +58,18 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /generated/prisma
 
 /generated/prisma
+
+# Media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.webp
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.mp3
+*.wav
+*.ogg
