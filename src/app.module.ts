@@ -8,6 +8,7 @@ import { LoggerModule } from '@/src/modules/logger/logger.module';
 import { FilesModule } from '@/src/modules/files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { join } from 'path';
     LoggerModule,
     AuthModule,
     UsersModule,
+    CategoriesModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],
