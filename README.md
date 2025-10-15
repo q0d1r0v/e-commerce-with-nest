@@ -28,33 +28,33 @@
 ## Project setup
 
 ```bash
-$ yarn install
+$ yarn
 ```
 
 ## Compile and run the project
 
 ```bash
 # development
-$ yarn run start
+$ yarn start
 
 # watch mode
-$ yarn run dev
+$ yarn dev
 
 # production mode
-$ yarn run start:prod
+$ yarn start:prod
 ```
 
 ## Run tests
 
 ```bash
 # unit tests
-$ yarn run test
+$ yarn test
 
 # e2e tests
-$ yarn run test:e2e
+$ yarn test:e2e
 
 # test coverage
-$ yarn run test:cov
+$ yarn test:cov
 ```
 
 ## Deployment
