@@ -60,12 +60,25 @@ model Category {
   @@map("categories")
 }
 
+model Currency {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  name       String
+  symbol     String
+  isMain     Boolean  @default(false)
+  rateToMain Decimal  @db.Decimal(12, 6)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("currencies")
+}
+
 model Product {
   id          String      @id @default(uuid())
   name        String
   description String?
-  price       Float
   stock       Int         @default(0)
+  price       Decimal     @db.Decimal(12, 2)
   categoryId  String      @map("category_id")
   category    Category    @relation(fields: [categoryId], references: [id])
   fileId      String?     @map("file_id")

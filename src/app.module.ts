@@ -9,6 +9,7 @@ import { FilesModule } from '@/src/modules/files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { CurrenciesModule } from './modules/currency/currencies.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
     AuthModule,
     UsersModule,
     CategoriesModule,
+    CurrenciesModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],
