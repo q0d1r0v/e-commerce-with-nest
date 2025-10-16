@@ -8,8 +8,10 @@ import { LoggerModule } from '@/src/modules/logger/logger.module';
 import { FilesModule } from '@/src/modules/files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { CategoriesModule } from './modules/categories/categories.module';
-import { CurrenciesModule } from './modules/currency/currencies.module';
+import { CategoriesModule } from '@/src/modules/categories/categories.module';
+import { CurrenciesModule } from '@/src/modules/currency/currencies.module';
+import { BrandsModule } from '@/src/modules/brands/brands.module';
+import { ProductsModule } from '@/src/modules/products/products.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { CurrenciesModule } from './modules/currency/currencies.module';
     UsersModule,
     CategoriesModule,
     CurrenciesModule,
+    BrandsModule,
+    ProductsModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],
