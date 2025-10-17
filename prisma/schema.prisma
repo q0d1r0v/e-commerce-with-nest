@@ -144,6 +144,7 @@ model Order {
   payment     Payment?
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
+  deletedAt   DateTime?     @map("deleted_at")
   Transaction Transaction[]
 
   @@map("orders")
@@ -173,16 +174,20 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+  CANCELLED
 }
 
 model Payment {
-  id        String        @id @default(uuid())
-  orderId   String        @unique @map("order_id")
-  amount    Float
-  method    PaymentMethod
-  status    PaymentStatus @default(PENDING)
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
+  id                    String        @id @default(uuid())
+  orderId               String        @unique @map("order_id")
+  amount                Float
+  method                PaymentMethod
+  status                PaymentStatus @default(PENDING)
+  paymentUrl            String?       @map("payment_url")
+  externalTransactionId String?       @map("external_transaction_id")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  deletedAt             DateTime?     @map("deleted_at")
 
   order       Order         @relation(fields: [orderId], references: [id])
   Transaction Transaction[]
@@ -235,6 +240,7 @@ model Transaction {
   metadata    Json?
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")
+  deletedAt   DateTime?         @map("deleted_at")
 
   @@index([userId])
   @@index([orderId])
