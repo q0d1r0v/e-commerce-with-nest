@@ -16,6 +16,7 @@ import { PaginationDto } from '@/src/common/dto/pagination.dto';
 import { Roles } from '@/src/decorators/roles.decorator';
 import { RolesGuard } from '@/src/guards/roles.guard';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { CurrentUser } from '@/src/decorators/current-user.decorator';
 
 @ApiTags('Orders')
 @UseGuards(RolesGuard)
@@ -26,25 +27,29 @@ export class OrdersController {
   @Post('/create')
   @Roles(['USER', 'ADMIN'])
   @ApiOperation({ summary: 'Create new order' })
-  async create(@Body() dto: CreateOrderDto) {
-    return this.ordersService.create(dto);
+  async create(@CurrentUser('id') userId: string, @Body() dto: CreateOrderDto) {
+    return this.ordersService.create({ ...dto, userId });
   }
 
   @Get('/load')
-  @Roles(['ADMIN'])
+  @Roles(['ADMIN', 'USER'])
   @ApiOperation({ summary: 'Get all orders with pagination' })
   async findAll(
+    @CurrentUser() user: { id: string; role: string },
     @Query() pagination: PaginationDto,
     @Query('search') search?: string,
   ) {
-    return this.ordersService.findAll(pagination, search);
+    return this.ordersService.findAll(pagination, search, user);
   }
 
   @Get('/get/:id')
   @Roles(['ADMIN', 'USER'])
   @ApiOperation({ summary: 'Get order by ID' })
-  async findOne(@Param('id') id: string) {
-    return this.ordersService.findById(id);
+  async findOne(
+    @CurrentUser() user: { id: string; role: string },
+    @Param('id') id: string,
+  ) {
+    return this.ordersService.findById(id, user);
   }
 
   @Patch('/admin/update/:id')

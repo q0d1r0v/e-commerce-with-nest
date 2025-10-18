@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -43,7 +44,7 @@ export class OrdersService {
     updatedAt: true,
   };
 
-  async create(dto: CreateOrderDto) {
+  async create(dto: CreateOrderDto & { userId: string }) {
     this.logger.debug(`Creating order for user ${dto.userId}`);
 
     const user = await this.prisma.user.findUnique({
@@ -54,6 +55,37 @@ export class OrdersService {
       throw new BadRequestException('Order must contain items');
 
     return this.prisma.$transaction(async (tx) => {
+      for (const item of dto.items) {
+        if (item.quantity <= 0) {
+          throw new BadRequestException(
+            `Invalid quantity (${item.quantity}) for product ID: ${item.productId}. Quantity must be greater than 0.`,
+          );
+        }
+        const product = await tx.product.findUnique({
+          where: { id: item.productId, deletedAt: null },
+          select: { id: true, stock: true, name: true },
+        });
+
+        if (!product) {
+          throw new NotFoundException(
+            `Product with id ${item.productId} not found`,
+          );
+        }
+
+        if (product.stock < item.quantity) {
+          throw new BadRequestException(
+            `Not enough stock for product "${product.name}". Available: ${product.stock}, requested: ${item.quantity}`,
+          );
+        }
+
+        await tx.product.update({
+          where: { id: product.id },
+          data: {
+            stock: { decrement: Number(item.quantity) },
+          },
+        });
+      }
+
       const order = await tx.order.create({
         data: {
           userId: dto.userId,
@@ -80,12 +112,17 @@ export class OrdersService {
         },
       });
 
+      this.logger.debug(`Order ${order.id} created and stock updated`);
       return order;
     });
   }
 
-  async findAll(pagination: PaginationDto, search?: string) {
-    this.logger.debug('Fetching all orders with pagination');
+  async findAll(
+    pagination: PaginationDto,
+    search?: string,
+    user?: { id: string; role: string },
+  ) {
+    this.logger.debug('Fetching orders with pagination');
 
     const where: Prisma.OrderWhereInput = {
       deletedAt: null,
@@ -101,6 +138,10 @@ export class OrdersService {
         : {}),
     };
 
+    if (user?.role === 'USER') {
+      where.userId = user.id;
+    }
+
     return paginate<
       Order,
       Prisma.OrderWhereInput,
@@ -115,12 +156,20 @@ export class OrdersService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string, user: { id: string; role: string }) {
     const order = await this.prisma.order.findFirst({
       where: { id, deletedAt: null },
       select: this.defaultSelect,
     });
-    if (!order) throw new NotFoundException(`Order with id ${id} not found`);
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    if (user.role === 'USER' && order.user.id !== user.id) {
+      throw new ForbiddenException('You are not allowed to view this order');
+    }
+
     return order;
   }
 
