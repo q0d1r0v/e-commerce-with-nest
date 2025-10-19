@@ -37,7 +37,7 @@ export class UsersService {
     this.logger.debug(`Creating user with phone: ${dto.phoneNumber}`);
 
     const existing = await this.prisma.user.findUnique({
-      where: { phoneNumber: dto.phoneNumber },
+      where: { phoneNumber: dto.phoneNumber, deletedAt: null },
     });
     if (existing)
       throw new BadRequestException(

@@ -8,4 +8,5 @@ export type UserDto = {
   file: { id: string; name: string; path: string } | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 };

@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { PrismaService } from '@/src/prisma.service';
 import { AuthModule } from '@/src/modules/auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '@/src/modules/users/users.module';
 import { AuthMiddleware } from '@/src/middleware/auth.middleware';
 import { LoggerModule } from '@/src/modules/logger/logger.module';
@@ -14,6 +14,7 @@ import { BrandsModule } from '@/src/modules/brands/brands.module';
 import { ProductsModule } from '@/src/modules/products/products.module';
 import { OrdersModule } from '@/src/modules/orders/orders.module';
 import { PaymentsModule } from '@/src/modules/payments/payments.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -24,6 +25,16 @@ import { PaymentsModule } from '@/src/modules/payments/payments.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_ACCESS_TOKEN_EXPIRY'),
+        },
+      }),
     }),
     FilesModule,
     LoggerModule,
@@ -37,7 +48,7 @@ import { PaymentsModule } from '@/src/modules/payments/payments.module';
     PaymentsModule,
   ],
   providers: [PrismaService],
-  exports: [PrismaService],
+  exports: [PrismaService, JwtModule],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

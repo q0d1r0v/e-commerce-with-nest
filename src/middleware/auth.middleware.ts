@@ -37,6 +37,7 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       const token = authHeader.split(' ')[1];
+
       const decoded = this.jwtService.verify<{
         sub: string;
         password: string;

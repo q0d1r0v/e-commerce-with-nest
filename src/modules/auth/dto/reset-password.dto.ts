@@ -1,7 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsPhoneNumber, IsString, MinLength } from 'class-validator';
+import { IsNumber, IsPhoneNumber, IsString, MinLength } from 'class-validator';
 
 export class ResetPasswordDto {
+  @ApiProperty()
+  @IsNumber()
+  code: number;
+
   @ApiProperty()
   @IsPhoneNumber()
   phoneNumber: string;

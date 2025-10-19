@@ -1,4 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -22,8 +28,15 @@ export class AuthController {
   }
 
   @Post('register/complete-profile')
-  completeProfile(@Body() dto: CompleteProfileDto) {
-    return this.authService.completeProfile(dto);
+  async completeProfile(
+    @Headers('authorization') authHeader: string,
+    @Body() dto: CompleteProfileDto,
+  ) {
+    if (!authHeader) throw new UnauthorizedException('Missing token');
+
+    const token = authHeader.replace('Bearer ', '');
+
+    return this.authService.completeProfile(dto, token);
   }
 
   @Post('login')

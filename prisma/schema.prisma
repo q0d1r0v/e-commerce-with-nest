@@ -9,7 +9,20 @@ datasource db {
 
 enum Role {
   ADMIN
+  MODERATOR
   USER
+}
+
+model OtpAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  success     Boolean  @default(false)
+  attemptedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("otp_attempts")
 }
 
 model User {
@@ -23,23 +36,26 @@ model User {
   fileId                     String?       @map("file_id")
   file                       File?         @relation(fields: [fileId], references: [id])
   isActive                   Boolean       @default(true) @map("is_active")
+  lastLoginAt                DateTime?
   createdAt                  DateTime      @default(now()) @map("created_at")
   updatedAt                  DateTime      @updatedAt @map("updated_at")
   deletedAt                  DateTime?     @map("deleted_at")
   orders                     Order[]
   Otp                        Otp[]
   Transaction                Transaction[]
+  OtpAttempt                 OtpAttempt[]
 
   @@map("users")
 }
 
 model Otp {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  code      String
-  expiresAt DateTime @map("expires_at")
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  code      Int
+  expiresAt DateTime  @map("expires_at")
+  used      Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
 
