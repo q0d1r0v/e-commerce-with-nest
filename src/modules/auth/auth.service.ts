@@ -303,7 +303,10 @@ export class AuthService {
 
     this.validatePassword(dto.password);
 
-    const hashedPassword = await bcrypt.hash(dto.password, this.BCRYPT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(
+      dto.password,
+      ~~this.BCRYPT_ROUNDS,
+    );
 
     const updatedUser = await this.prisma.user.update({
       where: { id: user.id },

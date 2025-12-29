@@ -8,12 +8,19 @@ import { LoggerService } from '@/src/modules/logger/logger.service';
 import { ConfigService } from '@nestjs/config';
 import { PaymentProviderFactory } from './payment-provider.factory';
 import { ClickProvider } from './providers/click.provider';
+import { ClickCallbackController } from './click-callback.controller';
+import { ClickCallbackService } from './click-callback.service';
 
 @Module({
-  controllers: [PaymentsController, ClickPaymentController],
+  controllers: [
+    PaymentsController,
+    ClickPaymentController,
+    ClickCallbackController,
+  ],
   providers: [
     PaymentsService,
     ClickPaymentService,
+    ClickCallbackService,
     PrismaService,
     LoggerService,
     ConfigService,
