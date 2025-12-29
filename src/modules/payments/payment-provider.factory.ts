@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentMethod } from '@prisma/client';
 import { IPaymentProvider } from './interfaces/payment-provider.interface';
-import { PaymeProvider } from './providers/payme.provider';
+import { ClickProvider } from './providers/click.provider';
 
 @Injectable()
 export class PaymentProviderFactory {
-  constructor(private readonly paymeProvider: PaymeProvider) {}
+  constructor(private readonly clickProvider: ClickProvider) {}
 
   getProvider(method: PaymentMethod): IPaymentProvider | null {
     switch (method) {
-      case PaymentMethod.PAYME:
-        return this.paymeProvider;
+      case PaymentMethod.CLICK:
+        return this.clickProvider;
       case PaymentMethod.CASH:
+      case PaymentMethod.CARD:
         return null;
       default:
         throw new Error(`Unsupported payment method: ${method}`);

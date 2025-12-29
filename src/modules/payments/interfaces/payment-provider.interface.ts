@@ -1,7 +1,7 @@
 export interface IPaymentProvider {
   createPayment(orderId: string, amount: number): PaymentCreateResponse;
-  checkPayment(transactionId: string): PaymentStatusResponse;
-  cancelPayment(transactionId: string): boolean;
+  checkPayment(transactionId: string): Promise<PaymentStatusResponse>;
+  cancelPayment(transactionId: string): Promise<boolean>;
 }
 
 export interface PaymentCreateResponse {

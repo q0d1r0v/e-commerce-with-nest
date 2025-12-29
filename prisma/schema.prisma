@@ -44,8 +44,29 @@ model User {
   Otp                        Otp[]
   Transaction                Transaction[]
   OtpAttempt                 OtpAttempt[]
+  UserCard                   UserCard[]
 
   @@map("users")
+}
+
+model UserCard {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardToken        String    @unique @map("card_token")
+  cardNumber       String    @map("card_number")
+  cardNumberMasked String    @map("card_number_masked")
+  phoneNumber      String?   @map("phone_number")
+  isTemporary      Boolean   @default(false) @map("is_temporary")
+  isActive         Boolean   @default(true) @map("is_active")
+  lastUsedAt       DateTime? @map("last_used_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  @@index([userId])
+  @@index([cardToken])
+  @@map("user_cards")
 }
 
 model Otp {

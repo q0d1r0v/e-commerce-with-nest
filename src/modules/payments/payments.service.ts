@@ -48,6 +48,8 @@ export class PaymentsService {
     amount: true,
     method: true,
     status: true,
+    paymentUrl: true,
+    externalTransactionId: true,
     createdAt: true,
     updatedAt: true,
   };
@@ -59,7 +61,7 @@ export class PaymentsService {
 
     // Order mavjudligini tekshirish
     const order = await this.prisma.order.findUnique({
-      where: { id: dto.orderId },
+      where: { id: dto.orderId, deletedAt: null },
       include: { user: true, payment: true },
     });
 
@@ -71,6 +73,7 @@ export class PaymentsService {
       throw new BadRequestException('Payment already exists for this order');
     }
 
+    // PAYME to'lovi uchun
     if (dto.method === PaymentMethod.PAYME) {
       const provider = this.paymentProviderFactory.getProvider(dto.method);
       const paymentResponse = provider?.createPayment(dto.orderId, dto.amount);
@@ -82,18 +85,18 @@ export class PaymentsService {
       }
 
       return this.prisma.$transaction(async (tx) => {
-        // Payment yaratish
         const payment = await tx.payment.create({
           data: {
             orderId: dto.orderId,
             amount: dto.amount,
             method: dto.method,
             status: PaymentStatus.PENDING,
+            paymentUrl: paymentResponse.paymentUrl,
+            externalTransactionId: paymentResponse.transactionId,
           },
           select: this.defaultSelect,
         });
 
-        // Transaction log yaratish
         await tx.transaction.create({
           data: {
             userId: order.userId,
@@ -113,6 +116,40 @@ export class PaymentsService {
         return {
           ...payment,
           paymentUrl: paymentResponse.paymentUrl,
+        };
+      });
+    }
+
+    // CLICK to'lovi uchun (invoice yoki card token orqali)
+    else if (dto.method === PaymentMethod.CLICK) {
+      // Click payment should be handled through ClickPaymentService
+      // This is just a placeholder for direct Click invoice creation
+      return this.prisma.$transaction(async (tx) => {
+        const payment = await tx.payment.create({
+          data: {
+            orderId: dto.orderId,
+            amount: dto.amount,
+            method: dto.method,
+            status: PaymentStatus.PENDING,
+          },
+          select: this.defaultSelect,
+        });
+
+        await tx.transaction.create({
+          data: {
+            userId: order.userId,
+            orderId: order.id,
+            paymentId: payment.id,
+            type: TransactionType.PAYMENT,
+            status: TransactionStatus.PENDING,
+            amount: dto.amount,
+            description: `Payment initiated via ${dto.method}`,
+          },
+        });
+
+        return {
+          ...payment,
+          message: 'Use Click endpoints for invoice or card token payment',
         };
       });
     }
@@ -242,6 +279,19 @@ export class PaymentsService {
         });
       }
 
+      // Agar to'lov bekor qilinsa
+      if (dto.status === PaymentStatus.CANCELLED) {
+        await tx.order.update({
+          where: { id: existing.orderId },
+          data: { status: 'CANCELLED' },
+        });
+
+        await tx.transaction.updateMany({
+          where: { paymentId: id, type: TransactionType.PAYMENT },
+          data: { status: TransactionStatus.FAILED },
+        });
+      }
+
       return payment;
     });
   }
@@ -277,6 +327,12 @@ export class PaymentsService {
           amount: existing.amount,
           description: 'Payment cancelled (refunded)',
         },
+      });
+
+      // Update order status
+      await tx.order.update({
+        where: { id: existing.orderId },
+        data: { status: 'CANCELLED' },
       });
     });
   }
